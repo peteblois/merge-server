@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "name": "merge_server",
+  "main": "./src/server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peteblois/merge_server"
+  },
+
+  "dependencies": {
+    "optimist": "~0.6.0"
+  }
+}
