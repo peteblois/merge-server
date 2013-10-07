@@ -44,6 +44,6 @@ var mergeHandler = new MergeHandler(handlers);
 http.createServer(function (request, response) {
   mergeHandler.process(request, response);
 
-}).listen(argv.port, '127.0.0.1');
+}).listen(argv.port, '0.0.0.0');
 
 console.log('Server running at http://127.0.0.1:' + argv.port + '/');

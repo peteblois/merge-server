@@ -13,7 +13,10 @@ var PathHandler = function(directory, root) {
 };
 
 PathHandler.prototype.serveFile = function(serverPath, response) {
-  var filename = path.join(this.dirPath, serverPath);
+  var filename = this.localizePath(serverPath);
+  if (!filename) {
+    return false;
+  }
   if (!fs.existsSync(filename)) {
     return false;
   }
@@ -25,16 +28,19 @@ PathHandler.prototype.serveFile = function(serverPath, response) {
 
   fs.readFile(filename, 'binary', function(err, file) {
     if (err) {
-      response.writeHead(500, {"Content-Type": "text/plain"});
+      response.writeHead(500, {
+          "Content-Type": "text/plain"
+        });
       response.write(err + "\n");
       response.end();
       return;
     }
     var mimeType = mimeTypes[path.extname(filename)];// || 'application/binary';
 
-    console.log('mimeType: ' + mimeType);
-
-    response.writeHead(200, {'Content-Type': mimeType});
+    response.writeHead(200, {
+        'Content-Type': mimeType,
+        'access-control-allow-origin': '*'
+    });
     response.write(file, 'binary');
     response.end();
   });
@@ -42,8 +48,23 @@ PathHandler.prototype.serveFile = function(serverPath, response) {
   return true;
 };
 
+PathHandler.prototype.localizePath = function(serverPath) {
+  if (serverPath.indexOf(this.root) != 0) {
+    return null;
+  }
+  serverPath = serverPath.substr(this.root.length);
+  var localPath = path.join(this.dirPath, serverPath);
+  console.log('localPath: ' + localPath);
+  return localPath;
+};
+
 PathHandler.prototype.listDirectory = function(serverPath) {
-  var dirname = path.join(this.dirPath, serverPath);
+  var dirname = this.localizePath(serverPath);
+  if (!dirname) {
+    if (serverPath[serverPath.length - 1] != '/') {
+      dirname = this.localizePath(serverPath + '/');
+    }
+  }
   if (!fs.existsSync(dirname)) {
     return null;
   }

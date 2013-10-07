@@ -35,6 +35,15 @@ MergeHandler.prototype.process = function(request, response) {
     this.sendDirectoryListing(serverPath, directoryContents, response);
     return;
   }
+  if (serverPath == '/') {
+    var contents = [];
+    for (var i = 0; i < this.handlers.length; ++i) {
+      var root = this.handlers[i].root.substr(1);
+      contents.push(root);
+    }
+    this.sendDirectoryListing(serverPath, contents, response);
+    return;
+  }
 
   response.writeHead(404, {'Content-Type': 'text/plain'});
   response.end('Not found :(\n');
@@ -42,6 +51,14 @@ MergeHandler.prototype.process = function(request, response) {
 
 MergeHandler.prototype.sendDirectoryListing = function(serverPath, contents, response) {
   response.writeHead(200, {'Content-Type': 'text/html'});
+  var dirParts = serverPath.split('/');
+  var dirPath = '';
+  for (var i = 0; i < dirParts.length; ++i) {
+    var url = dirParts.slice(0, i + 1).join('/');
+    var anchor = '<a href="' + url + '">' + dirParts[i] + '</a>';
+    dirPath += anchor + '/';
+  }
+
   var header = [
 '<!DOCTYPE html>',
 '<html>',
@@ -50,7 +67,7 @@ MergeHandler.prototype.sendDirectoryListing = function(serverPath, contents, res
 '</head>',
 '<body>',
 '  <code>',
-'    <div>' + serverPath + '</div>',
+'    <div>' + dirPath + '</div>',
 '    <hr/>',
 '    <ul>\n'].join('\n');
   response.write(header);
