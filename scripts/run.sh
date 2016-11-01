@@ -7,6 +7,4 @@ if [ ! -d ".git" ]; then
 fi
 
 supervisor -- src/server.js \
-    --path=/usr/local/google/home/blois/src/dart/dart:/dart/ \
-    --path=../../:/github/ \
-    --path=../../../../dart/:/scratch/ \
+    --path=../../:/github/
