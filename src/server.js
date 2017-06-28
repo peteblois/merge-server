@@ -1,12 +1,18 @@
-var http = require('http');
-var opts = require('optimist');
-var url = require("url");
-var PathHandler = require('./path_handler.js');
-var MergeHandler = require('./merge_handler.js');
+const MergeHandler = require('./merge_handler.js');
+const PathHandler = require('./path_handler.js');
+const fs = require('fs');
+const http = require('http');
+const https = require('https');
+const optimist = require('optimist');
+const url = require('url');
 
-var opts = opts.options('port', {
+const opts = optimist.options('port', {
       default: 9898,
       describe: 'HTTP service port'
+    })
+    .options('https-port', {
+      default: 9899,
+      describe: 'HTTPS service port'
     })
     .options('help', {
       alias: '?',
@@ -41,9 +47,19 @@ for (var i = 0; i < paths.length; ++i) {
 
 var mergeHandler = new MergeHandler(handlers);
 
-http.createServer(function (request, response) {
-  mergeHandler.process(request, response);
+const httpsOpts = {
+  key: fs.readFileSync('./src/key.pem'),
+  cert: fs.readFileSync('./src/cert.pem')
+};
 
+https.createServer(httpsOpts, (request, response) => {
+  mergeHandler.process(request, response);
+}).listen(argv['https-port'], '0.0.0.0');
+
+console.log(`Server running at https://127.0.0.1:${argv['https-port']}/`);
+
+http.createServer((request, response) => {
+  mergeHandler.process(request, response);
 }).listen(argv.port, '0.0.0.0');
 
-console.log('Server running at http://127.0.0.1:' + argv.port + '/');
+console.log(`Server running at http://127.0.0.1:${argv.port}/`);

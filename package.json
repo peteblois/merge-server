@@ -9,5 +9,9 @@
 
   "dependencies": {
     "optimist": "~0.6.0"
+  },
+
+  "scripts": {
+    "start": "node src/server --path=../..:/"
   }
 }
