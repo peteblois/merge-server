@@ -36,12 +36,15 @@ class PathHandler {
         response.end();
         return;
       }
+      const header = {
+        'access-control-allow-origin': '*'
+      };
       const mimeType = mimeTypes[path.extname(filename)];
+      if (mimeType) {
+        header['Content-Type'] = mimeType;
+      }
 
-      response.writeHead(200, {
-          'Content-Type': mimeType,
-          'access-control-allow-origin': '*'
-      });
+      response.writeHead(200, header);
       response.write(file, 'binary');
       response.end();
     });
