@@ -1,26 +1,30 @@
-var url = require('url');
+import url from 'url';
 
-class MergeHandler {
+export default class MergeHandler {
   constructor(handlers) {
     this.handlers = handlers;
   }
 
-  process(request, response) {
-    var serverPath = url.parse(request.url).pathname;
+  async process(request, response) {
+    const parsedUrl = url.parse(request.url, true);
+    const serverPath = parsedUrl.pathname;
     console.log('Serving ' + serverPath);
 
-    for (var i = 0; i < this.handlers.length; ++i) {
-      var handler = this.handlers[i];
+    if (serverPath.split('/').includes('.git')) {
+      response.writeHead(404, {'Content-Type': 'text/plain'});
+      response.end('Not found :(\n');
+      return;
+    }
 
-      if (handler.serveFile(serverPath, response)) {
+    for (const handler of this.handlers) {
+      if (await handler.serveFile(serverPath, response, parsedUrl)) {
         return;
       }
     }
 
-    var directoryContents = null;
-    for (var i = 0; i < this.handlers.length; ++i) {
-      var handler = this.handlers[i];
-      var contents = handler.listDirectory(serverPath);
+    let directoryContents = null;
+    for (const handler of this.handlers) {
+      const contents = handler.listDirectory(serverPath);
 
       if (contents) {
         if (!directoryContents) {
@@ -37,9 +41,9 @@ class MergeHandler {
       return;
     }
     if (serverPath == '/') {
-      var contents = [];
-      for (var i = 0; i < this.handlers.length; ++i) {
-        var root = this.handlers[i].root.substr(1);
+      const contents = [];
+      for (const handler of this.handlers) {
+        const root = handler.root.substr(1);
         contents.push(root);
       }
       this.sendDirectoryListing(serverPath, contents, response);
@@ -52,15 +56,15 @@ class MergeHandler {
 
   sendDirectoryListing(serverPath, contents, response) {
     response.writeHead(200, {'Content-Type': 'text/html'});
-    var dirParts = serverPath.split('/');
-    var dirPath = '';
-    for (var i = 0; i < dirParts.length; ++i) {
-      var url = dirParts.slice(0, i + 1).join('/');
-      var anchor = '<a href="' + url + '">' + dirParts[i] + '</a>';
+    const dirParts = serverPath.split('/');
+    let dirPath = '';
+    for (let i = 0; i < dirParts.length; ++i) {
+      const url = dirParts.slice(0, i + 1).join('/');
+      const anchor = '<a href="' + url + '">' + dirParts[i] + '</a>';
       dirPath += anchor + '/';
     }
 
-    var header = [
+    const header = [
   '<!DOCTYPE html>',
   '<html>',
   '<head>',
@@ -77,11 +81,10 @@ class MergeHandler {
       serverPath = serverPath.substr(0, serverPath.length - 1);
     }
 
-    for (var i = 0; i < contents.length; ++i) {
-      var filename = contents[i];
+    for (const filename of contents) {
       response.write('      <li><a href="' + serverPath + '/' + filename + '">' + filename + '</a></li>\n');
     }
-    var footer = [
+    const footer = [
   '    </ul>',
   '  </code>',
   '</body>',
@@ -92,4 +95,4 @@ class MergeHandler {
 }
 
 
-module.exports = MergeHandler;
+// module.exports = MergeHandler;

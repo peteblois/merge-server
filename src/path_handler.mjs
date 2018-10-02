@@ -1,41 +1,38 @@
-const fs = require("fs");
-const path = require("path");
+import fs from 'fs';
+import path from 'path';
 
 const mimeTypes = {
   '.css': 'text/css',
   '.html': 'text/html',
   '.js': 'text/javascript',
+  '.py': 'text/x-python',
 }
 
-class PathHandler {
+const fsp = fs.promises;
+
+export default class PathHandler {
   constructor(directory, root) {
     this.dirPath = path.resolve(process.cwd(), directory);
     this.root = root;
   }
 
-  serveFile(serverPath, response) {
+  async serveFile(serverPath, response, url) {
     const filename = this.localizePath(serverPath);
     if (!filename) {
       return false;
     }
-    if (!fs.existsSync(filename)) {
-      return false;
-    }
 
-    const stat = fs.statSync(filename);
-    if (!stat.isFile()) {
-      return false;
-    }
-
-    fs.readFile(filename, 'binary', function(err, file) {
-      if (err) {
-        response.writeHead(500, {
-            "Content-Type": "text/plain"
-          });
-        response.write(err + "\n");
-        response.end();
-        return;
+    try {
+      const stat = await fsp.stat(filename);
+      if (!stat.isFile()) {
+        return false;
       }
+    } catch (e) {
+      return false;
+    }
+
+    try {
+      const file = await fsp.readFile(filename, 'binary');
       const header = {
         'access-control-allow-origin': '*'
       };
@@ -43,11 +40,21 @@ class PathHandler {
       if (mimeType) {
         header['Content-Type'] = mimeType;
       }
+      if (url.query.download) {
+        const name = path.basename(filename);
+        header['Content-Disposition'] = `attachment;filename="${name}";filename*=UTF-8''${name}`;
+      }
 
       response.writeHead(200, header);
       response.write(file, 'binary');
       response.end();
-    });
+    } catch (err) {
+      response.writeHead(500, {
+          "Content-Type": "text/plain"
+        });
+      response.write(err + "\n");
+      response.end();
+    }
 
     return true;
   }
@@ -82,5 +89,3 @@ class PathHandler {
     return fs.readdirSync(dirname);
   }
 }
-
-module.exports = PathHandler;

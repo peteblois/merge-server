@@ -12,6 +12,6 @@
   },
 
   "scripts": {
-    "start": "node src/server --path=../..:/"
+    "start": "node --experimental-modules src/server --path=../..:/"
   }
 }
