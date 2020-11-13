@@ -1,5 +1,5 @@
-import MergeHandler from './merge_handler';
-import PathHandler from './path_handler';
+import MergeHandler from './merge_handler.mjs';
+import PathHandler from './path_handler.mjs';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
@@ -11,7 +11,7 @@ function main() {
         describe: 'HTTP service port'
       })
       .options('https-port', {
-        default: 9899,
+        default: 9897,
         describe: 'HTTPS service port'
       })
       .options('help', {
@@ -51,6 +51,7 @@ function main() {
   };
 
   https.createServer(httpsOpts, (request, response) => {
+    // console.log(request.headers);
     mergeHandler.process(request, response);
   }).listen(argv['https-port'], '0.0.0.0');
 

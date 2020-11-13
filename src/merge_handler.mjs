@@ -6,6 +6,18 @@ export default class MergeHandler {
   }
 
   async process(request, response) {
+    console.log(request.method);
+    if (request.method == 'OPTIONS') {
+      const headers = {};
+      headers['Access-Control-Allow-Methods'] = 'GET';
+      headers['Access-Control-Allow-Origin'] = '*';
+      if (request.headers['access-control-request-headers']) {
+        headers['Access-Control-Allow-Headers'] = request.headers['access-control-request-headers'];
+      }
+      response.writeHead(200, headers);
+      response.end();
+      return;
+    }
     const parsedUrl = url.parse(request.url, true);
     const serverPath = parsedUrl.pathname;
     console.log('Serving ' + serverPath);
@@ -93,6 +105,3 @@ export default class MergeHandler {
       return;
   }
 }
-
-
-// module.exports = MergeHandler;
